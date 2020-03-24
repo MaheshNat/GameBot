@@ -1,0 +1,23 @@
+{
+  "name": "pokerbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "gameBot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MaheshNat/GameBot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MaheshNat/GameBot/issues"
+  },
+  "homepage": "https://github.com/MaheshNat/GameBot#readme",
+  "dependencies": {
+    "discord.js": "^12.0.2",
+    "node.js": "0.0.1-security"
+  }
+}
