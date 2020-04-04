@@ -15,6 +15,9 @@ module.exports = {
     message.reply(
       `Sucessfully left a game of ${game.name} hosted by ${game.createdBy}.`
     );
-    return games.splice(game);
+    let index = games.indexOf(game);
+    game.players.splice(message.author.username);
+    if (game.players.length === 0) games.splice(game);
+    else games[index] = game;
   },
 };
