@@ -16,7 +16,7 @@ module.exports = {
       message.reply(
         `Sucessfully ended a game of ${game.name}. Since you are the creator, this game will be discontinued.`
       );
-      return games.splice(game);
+      return games.splice(game, 1);
     }
     message.reply(
       `Sucessfully left a game of ${game.name} hosted by ${game.createdBy}.`
