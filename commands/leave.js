@@ -12,6 +12,9 @@ module.exports = {
       return message.reply(
         'You have to be playing a game to use this command.'
       );
-    games.splice(game);
+    message.reply(
+      `Sucessfully left a game of ${game.name} hosted by ${game.createdBy}.`
+    );
+    return games.splice(game);
   },
 };
