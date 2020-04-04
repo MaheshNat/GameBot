@@ -9,10 +9,10 @@ module.exports = {
     if (games.length === 0) {
       return message.reply('No games have been created yet.');
     }
-    games.forEach((game) => {
-      reply += `game: ${game.name}, players: [${game.players}], createdBy: ${
-        game.createdBy
-      }, full: ${
+    games.forEach((game, index) => {
+      reply += `index: ${index + 1}, game: ${game.name}, players: [${
+        game.players
+      }], createdBy: ${game.createdBy}, full: ${
         client.commands.get(game.name).players === game.players.length
           ? 'yes'
           : 'no'

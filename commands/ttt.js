@@ -2,7 +2,7 @@ const Game = require('../models/game');
 let turn = 0;
 
 module.exports = {
-  name: 'tic-tac-toe',
+  name: 'ttt',
   isGame: true,
   players: 2,
   description: 'A traditional game of tic-tac-toe',
@@ -69,7 +69,7 @@ function checkWin(board) {
 function checkDraw(board) {
   for (let i = 0; i < board.length; i++) {
     for (let j = 0; j < board[i].length; j++) {
-      if (board[i][j] !== '') return false;
+      if (board[i][j] === '') return false;
     }
   }
   return true;

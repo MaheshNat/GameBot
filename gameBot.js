@@ -6,7 +6,8 @@ client.commands = new discord.Collection();
 const fs = require('fs');
 const Game = require('./models/game');
 
-const { token, prefix } = require('./config.json');
+const token = process.env.token;
+const prefix = process.env.prefix;
 
 const commandFiles = fs
   .readdirSync('./commands/')
@@ -37,10 +38,19 @@ client.on('message', (message) => {
       if (args['join']) {
         // if (games.find((game) => game.createdBy === message.author.username))
         //   return message.reply(`You cannot join your own game!`);
-        let joinGame = games.find((game) => game.createdBy === args['join']);
+        let joinGame = games[parseInt(args['join']) - 1];
         if (joinGame.players.length === command.players) {
           return message.reply(
             'This game is full! Type !games to view current games.'
+          );
+        }
+        if (
+          games.find((game) => game.players.includes(message.author.username))
+        )
+          return message.reply('You already joined that game!');
+        if (games.find((game) => game.createdBy === message.author.username)) {
+          return message.reply(
+            'You cannot join a game since you are currently hosting one.'
           );
         }
         joinGame.players.push(message.author.username);
@@ -61,7 +71,7 @@ client.on('message', (message) => {
           )
         );
         message.reply(
-          `Your game has been created! Other players can join this game by typing !${command.name} join=${message.author.username}`
+          `Your game has been created! Other players can join this game by typing !${command.name} join=${games.length}`
         );
       }
     }
