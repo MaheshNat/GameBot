@@ -6,8 +6,8 @@ client.commands = new discord.Collection();
 const fs = require('fs');
 const Game = require('./models/game');
 
-const token = 'NjkyMDkwNDEzMzE3NzUwNzg1.Xokmsw.MstqUzylQk-HnNruFMYXtVf4To8';
-const prefix = '!';
+const token = process.env.token;
+const prefix = process.env.prefix;
 
 const commandFiles = fs
   .readdirSync('./commands/')
