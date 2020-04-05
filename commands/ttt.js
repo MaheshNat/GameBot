@@ -7,9 +7,7 @@ module.exports = {
   players: 2,
   description: 'A traditional game of tic-tac-toe',
   execute(message, args, games) {
-    let game = games.find((game) =>
-      game.players.includes(message.author.username)
-    );
+    let game = games.find((game) => game.players.includes(message.author));
     if (!game)
       return message.reply('You have to join a game to use that command.');
     if (game.players.length !== this.players) return;
@@ -19,8 +17,9 @@ module.exports = {
         ['', '', ''],
         ['', '', ''],
       ];
+      game.started = true;
       return message.reply('The game has started.');
-    } else if (game.players[turn] !== message.author.username) {
+    } else if (game.players[turn] !== message.author) {
       return message.reply('It is not your turn!');
     } else {
       let loc = parseInt(Object.keys(args).find((key) => !isNaN(key)));
@@ -46,11 +45,11 @@ module.exports = {
         message.channel.send('The game ended in a draw!!!');
       else if (result === 'X')
         message.channel.send(
-          `Congratulations! player ${game.players[0]} won the game!!!`
+          `Congratulations! player ${game.players[0].username} won the game!!!`
         );
       else if (result === 'O')
         message.channel.send(
-          `Congratulations! player ${game.players[1]} won the game!!!`
+          `Congratulations! player ${game.players[1].username} won the game!!!`
         );
       games.splice(game);
     }

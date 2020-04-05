@@ -10,12 +10,12 @@ module.exports = {
       return message.reply('No games have been created yet.');
     }
     games.forEach((game, index) => {
-      reply += `index: ${index + 1}, game: ${game.name}, players: [${
-        game.players
-      }], createdBy: ${game.createdBy}, full: ${
-        client.commands.get(game.name).players === game.players.length
-          ? 'yes'
-          : 'no'
+      reply += `index: ${index + 1}, game: ${
+        game.name
+      }, players: [${game.players.map(
+        (player) => player.username
+      )}], createdBy: ${game.createdBy.username}, started: ${
+        game.started ? 'yes' : 'no'
       }\n`;
     });
     message.channel.send(reply);

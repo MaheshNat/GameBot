@@ -6,8 +6,8 @@ client.commands = new discord.Collection();
 const fs = require('fs');
 const Game = require('./models/game');
 
-const token = process.env.token;
-const prefix = process.env.prefix;
+const token = 'NjkyMDkwNDEzMzE3NzUwNzg1.Xokmsw.MstqUzylQk-HnNruFMYXtVf4To8';
+const prefix = '!';
 
 const commandFiles = fs
   .readdirSync('./commands/')
@@ -34,47 +34,19 @@ client.on('message', (message) => {
   }
   let command = client.commands.get(words[0]);
   if (command) {
-    if (command.isGame) {
-      if (args['join']) {
-        // if (games.find((game) => game.createdBy === message.author.username))
-        //   return message.reply(`You cannot join your own game!`);
-        let joinGame = games[parseInt(args['join']) - 1];
-        if (joinGame.players.length === command.players) {
-          return message.reply(
-            'This game is full! Type !games to view current games.'
-          );
-        }
-        if (
-          games.find((game) => game.players.includes(message.author.username))
-        )
-          return message.reply('You already joined that game!');
-        if (games.find((game) => game.createdBy === message.author.username)) {
-          return message.reply(
-            'You cannot join a game since you are currently hosting one.'
-          );
-        }
-        joinGame.players.push(message.author.username);
-        message.reply(
-          `Successfully joined a game of ${joinGame.name} created by ${joinGame.createdBy}`
+    if (command.isGame && Object.keys(args).length === 0) {
+      if (games.find((game) => game.createdBy === message.author))
+        return message.reply(
+          'You can only create one game at a time! Finish your existing game to created a new one.'
         );
-      } else if (Object.keys(args).length === 0) {
-        if (games.find((game) => game.createdBy === message.author.username))
-          return message.reply(
-            'You can only create one game at a time! Finish your existing game to created a new one.'
-          );
-        games.push(
-          new Game(
-            command.name,
-            [message.author.username],
-            message.author.username,
-            false
-          )
-        );
-        message.reply(
-          `Your game has been created! Other players can join this game by typing !${command.name} join=${games.length}`
-        );
-      }
+      games.push(
+        new Game(command.name, [message.author], message.author, false)
+      );
+      message.reply(
+        `Your game has been created! Other players can join this game by typing !join ${games.length}`
+      );
     }
+    // }
     command.execute(message, args, games);
   }
 });
