@@ -4,7 +4,10 @@ const fs = require('fs');
 const Game = require('../models/game');
 const merge = require('merge-img');
 
+//represents the index of the player whose turn it is
 let turn = 0;
+//represents in which direction the game is being played (which can change by a reverse card)
+//1 represents normal direction, -1 represents reverse
 let direction = 1;
 
 module.exports = {
@@ -13,6 +16,7 @@ module.exports = {
   players: Number.POSITIVE_INFINITY,
   description: 'A game of uno, which can be configured to include jump-ins.',
   async execute(message, args, games, start = false) {
+    //finding the game the user is in
     let game = games.find((game) => game.players.includes(message.author));
     if (!game)
       return message.reply('You have to join a game to use that command.');
@@ -21,12 +25,14 @@ module.exports = {
       //creating a deck containing all uno cards
       game.deck = [];
       for (let i = 0; i < 10; i++)
+        //adding all number cards of each color [0-9]
         game.deck = game.deck.concat([
           `blue_${i}`,
           `red_${i}`,
           `yellow_${i}`,
           `green_${i}`,
         ]);
+      //adding special cards to the deck
       let cards = [
         'blue_plus_2',
         'blue_reverse',
@@ -45,7 +51,8 @@ module.exports = {
         'plus_4',
         'plus_4',
       ];
-      game.deck = game.deck.concat([...cards, ...cards]);
+      //adding the cards twice to the deck
+      game.deck = game.deck.concat(cards).concat(cards);
       //shuffling the deck
       game.deck.sort(() => Math.random() - 0.5);
       //assigning each player a deck of 7 cards
@@ -53,7 +60,12 @@ module.exports = {
       game.players.forEach((player) => {
         game.hands[player] = game.deck.splice(0, 7);
 
-        //NOTE: PLEASE REFACTOR TO USE PROMISES!!! FOR SOME REASON THEY DON'T WORK!
+        //NOTE: REFACTOR TO USE PROMISES!!! FOR SOME REASON THEY DON'T WORK!
+
+        //merges the images of the players cards into one cohesive image
+        //merges -> writes to file -> sends images -> deletes files
+        //for some reason the discord.js library can't send file objects, it always needs a
+        //file directory in order to send it, so we have to write the file to the bot's directory.
         merge(game.hands[player].map((card) => `./images/uno/${card}.png`))
           .then((img) => {
             console.log('done merging');
