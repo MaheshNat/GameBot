@@ -10,8 +10,8 @@ module.exports = client;
 // const token = process.env.token;
 // const prefix = process.env.prefix;
 
-const token = 'NjkyMDkwNDEzMzE3NzUwNzg1.XolXOA.tJAmc6BTDqn2qAbrcsPOuZhb0wU';
-const prefix = '!';
+const token = process.env.token;
+const prefix = process.env.prefix;
 
 //putting command files to client.commands map
 const commandFiles = fs
