@@ -7,8 +7,11 @@ const client = new discord.Client();
 client.commands = new discord.Collection();
 module.exports = client;
 
-const token = process.env.token;
-const prefix = process.env.prefix;
+// const token = process.env.token;
+// const prefix = process.env.prefix;
+
+const token = 'NjkyMDkwNDEzMzE3NzUwNzg1.XolXOA.tJAmc6BTDqn2qAbrcsPOuZhb0wU';
+const prefix = '!';
 
 //putting command files to client.commands map
 const commandFiles = fs
@@ -45,14 +48,20 @@ client.on('message', (message) => {
   let command = client.commands.get(words[0]);
   if (command) {
     //checking if attempting to create a new game
-    if (command.isGame && Object.keys(args).length === 0) {
+    if (command.isGame && (Object.keys(args).length === 0 || args['private'])) {
       //exiting if user is the creator of a current game, and is attempting to create a new one
       if (games.find((game) => game.createdBy === message.author))
         return message.reply(
           'You can only create one game at a time! Finish your existing game to created a new one.'
         );
       games.push(
-        new Game(command.name, [message.author], message.author, false)
+        new Game(
+          command.name,
+          [message.author],
+          message.author,
+          false,
+          args['private']
+        )
       );
       message.reply(
         `Your game has been created! Other players can join this game by typing !join ${games.length}`

@@ -59,34 +59,44 @@ module.exports = {
       game.hands = {};
       game.players.forEach((player) => {
         game.hands[player] = game.deck.splice(0, 7);
-
-        //NOTE: REFACTOR TO USE PROMISES!!! FOR SOME REASON THEY DON'T WORK!
-
-        //merges the images of the players cards into one cohesive image
-        //merges -> writes to file -> sends images -> deletes files
-        //for some reason the discord.js library can't send file objects, it always needs a
-        //file directory in order to send it, so we have to write the file to the bot's directory.
-        merge(game.hands[player].map((card) => `./images/uno/${card}.png`))
-          .then((img) => {
-            console.log('done merging');
-            img.write(`./images/${player.username}.png`, () => {
-              console.log('done writing');
-              player
-                .send('Your uno hand:', {
-                  files: [`./images/${player.username}.png`],
-                })
-                .then((message) => {
-                  console.log('done sending');
-                  fs.unlink(`./images/${player.username}.png`, (result) => {
-                    console.log('done deleting');
-                  });
-                });
-            });
-          })
-          .catch((err) => {
-            console.log(err);
-          });
+        sendHand(game, player);
       });
+      const startEmbed = new discord.MessageEmbed()
+      .setColor('#0099f')
+      .setTitle('The game has started!')
+      .setDescription(`It is ${game.players[turn].username}'s turn`);
+      
     }
   },
 };
+
+function sendHand(game, player) {
+  //NOTE: REFACTOR TO USE PROMISES!!! FOR SOME REASON THEY DON'T WORK!
+
+  //merges the images of the players cards into one cohesive image
+  //merges -> writes to file -> sends images -> deletes files
+  //for some reason the discord.js library can't send file objects, it always needs a
+  //file directory in order to send it, so we have to write the file to the bot's directory.
+  let fileName = '';
+  merge(game.hands[player].map((card) => `./images/uno/${card}.png`))
+    .then((img) => {
+      console.log('done merging');
+      fileName = `./images/${player.username}.png`;
+      img.write(fileName, () => {
+        console.log('done writing');
+        player
+          .send('Your uno hand:', {
+            files: [fileName],
+          })
+          .then((message) => {
+            console.log('done sending');
+            fs.unlink(fileName, (result) => {
+              console.log('done deleting');
+            });
+          });
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+}

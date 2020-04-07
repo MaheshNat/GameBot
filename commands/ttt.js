@@ -125,7 +125,7 @@ function printBoard(board) {
     for (let cell of row) {
       output +=
         cell === ''
-          ? `:${index}:`
+          ? `:${getWord(index)}:`
           : cell === 'X'
           ? ':regional_indicator_x:'
           : ':o2:';
@@ -134,4 +134,27 @@ function printBoard(board) {
     output += '\n';
   }
   return output;
+}
+
+function getWord(number) {
+  switch (number) {
+    case 1:
+      return 'one';
+    case 2:
+      return 'two';
+    case 3:
+      return 'three';
+    case 4:
+      return 'four';
+    case 5:
+      return 'five';
+    case 6:
+      return 'six';
+    case 7:
+      return 'seven';
+    case 8:
+      return 'eight';
+    case 9:
+      return 'nine';
+  }
 }

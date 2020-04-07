@@ -16,9 +16,9 @@ module.exports = {
         game.name
       }, players: [${game.players.map(
         (player) => player.username
-      )}], createdBy: ${game.createdBy.username}, started: ${
-        game.started ? 'yes' : 'no'
-      }\n`;
+      )}], createdBy: ${game.createdBy.username}, private: ${
+        game.isPrivate ? 'yes' : 'no'
+      }, started: ${game.started ? 'yes' : 'no'}\n`;
     });
     message.channel.send(reply);
   },
