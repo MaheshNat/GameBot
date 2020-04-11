@@ -7,9 +7,6 @@ const client = new discord.Client();
 client.commands = new discord.Collection();
 module.exports = client;
 
-// const token = process.env.token;
-// const prefix = process.env.prefix;
-
 const token = process.env.token;
 const prefix = process.env.prefix;
 
