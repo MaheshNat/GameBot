@@ -27,7 +27,7 @@ module.exports = {
     message.reply(`Successfully accepted ${player.username} into the game.`);
 
     let command = client.commands.get(game.name);
-    if (joinGame.players.length === command.players)
+    if (game.players.length === command.players)
       command.execute(message, args, games);
   },
 };

@@ -12,6 +12,7 @@ module.exports = {
     //finding the game the user wants to join using the args object
     let joinGame =
       games[parseInt(Object.keys(args).find((key) => !isNaN(key))) - 1];
+    if (!joinGame) return message.reply('You need to enter an id to join.');
     if (joinGame.started) {
       return message.reply(
         'This game has already started! Type !games to view current games.'
@@ -30,7 +31,8 @@ module.exports = {
     );
 
     let command = client.commands.get(joinGame.name);
-    if (joinGame.players.length === command.players)
-      command.execute(message, args, games);
+    if (joinGame.players.length === command.players) {
+      command.execute(message, args, games, true);
+    }
   },
 };

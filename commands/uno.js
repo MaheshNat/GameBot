@@ -65,6 +65,7 @@ module.exports = {
         .setColor('#0099f')
         .setTitle('The game has started!')
         .setDescription(`It is ${game.players[turn].username}'s turn`);
+      message.channel.send(startEmbed);
     }
   },
 };

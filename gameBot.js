@@ -7,8 +7,10 @@ const client = new discord.Client();
 client.commands = new discord.Collection();
 module.exports = client;
 
-const token = process.env.token;
-const prefix = process.env.prefix;
+// const token = process.env.token;
+const token = 'NjkyMDkwNDEzMzE3NzUwNzg1.Xo0Gwg.WNj_O-9ebDr58EX3_bGomCzLXZ0';
+// const prefix = process.env.prefix;
+const prefix = '!';
 
 //putting command files to client.commands map
 const commandFiles = fs
