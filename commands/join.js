@@ -26,6 +26,7 @@ module.exports = {
     }
     //adding the user to the game's players
     joinGame.players.push(message.author);
+    if (joinGame.name === 'rps') joinGame.channel = message.channel;
     message.reply(
       `Successfully joined a game of ${joinGame.name} created by ${joinGame.createdBy.username}`
     );
