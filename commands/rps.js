@@ -52,7 +52,11 @@ module.exports = {
         console.log('reached');
         //determines the winner by comparing the two messages using the helper function
         game.channel.send(
-          determineWinner(hands[game.hand1 - 1], hands[game.hand2 - 1], game)
+          determineWinner(
+            hands[parseInt(game.hand1) - 1],
+            hands[parseInt(game.hand2) - 1],
+            game
+          )
         );
 
         //deleting the game as it has ended
