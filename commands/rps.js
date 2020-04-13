@@ -1,5 +1,7 @@
 const discord = require('discord.js');
 
+const hands = ['rock', 'paper', 'scissors'];
+
 module.exports = {
   name: 'rps',
   isGame: true,
@@ -16,7 +18,6 @@ module.exports = {
       game.started = true;
       game.hand1 = '';
       game.hand2 = '';
-      hands = ['rock', 'paper', 'scissor'];
 
       //sends message to the player
       game.players[0].send('Select: \n !rps choice=(1:Rock 2:paper 3:scissor)');
@@ -49,7 +50,6 @@ module.exports = {
       }
 
       if (game.hand1 !== '' && game.hand2 !== '') {
-        console.log('reached');
         //determines the winner by comparing the two messages using the helper function
         game.channel.send(
           determineWinner(
