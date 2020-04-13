@@ -14,23 +14,39 @@ module.exports = {
     if (game.players.length !== this.players) return;
     //exiting if 2 players have not been joined yet.
     game.started = true;
-    message.author.send('hello');
-
-    //randomly generating hand
+    if(!game.started) {
+        game.started = true;
+        return message.channel.send('game started');
+    }
+    let hand1 = '';
+    let hand2 = '';
     let hands = ['rock', 'paper', 'scissor'];
-    let hands1 = [];
-    let hands2 = [];
-    for (let i = 3; i>0; i--)
-    {
-        hands1.push(hands.splice(Math.floor((Math.random()*limit)+1),1));
+
+    //sends message to the player 
+    message.players[0].send('Select: \n1:Rock 2:paper 3:scissor');
+    message.players[1].send('Select: \n1:Rock 2:paper 3:scissor');
+
+    //reads the message of players[0] to determine their hand
+    if(message.channel instanceof DMChannel) {
+      if(message.author === message.players[0]) {  
+        if (message.content < 4 && message.content > 0) {hand1 = message.content;}
+        else {message.player[0].send('Please choose a valid number')}
+      }
     }
-    hands = ['rock', 'paper', 'scissor'];
-    for (let i = 3; i>0; i--)
-    {
-        hands2.push(hands.splice(Math.floor((Math.random()*limit)+1),1));
+
+     //reads the message of players[1] to determine their hand
+    if(message.channel instanceof DMChannel) {
+      if(message.author === message.players[1]) {  
+        if (message.content < 4 && message.content > 0) {hand2 = message.content;}
+        else {message.player[1].send('Please choose a valid number')}
+      }
     }
-    message.players[0].send(sendHand(hands1));
-    message.players[1].send(sendHand(hands2));
+
+    //determines the winner by comparing the two messages using the helper function
+    determineWinner(hands[hand1 - 1], hands[hand2 - 1]);
+
+    //deleting the game as it has ended
+    games.splice(game);
   }
 };
 
@@ -53,15 +69,4 @@ function determineWinner(hand1, hand2){
         if(hand2 === 'scissors')    {return `Congratulations! Player ${game.players[0].username} won the game!`;}
     }
     return 'error lmao';
-}
-
-//makese the string sent to the player
-function sendHand(customList)
-{
-    let botMessage = '';
-    for (let i = 1; i<4; i++)
-    {
-       botMessage += '' + i + ": " + customList[i-1] + ' ';
-    }
-    return botMessage;
 }
