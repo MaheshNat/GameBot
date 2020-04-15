@@ -1,37 +1,48 @@
 const discord = require('discord.js');
 const merge = require('merge-img');
 const fs = require('fs');
+const User = require('../models/user.js');
+const mongoose = require('mongoose');
 
 const Stages = {
   BIDDING: 'Bidding',
   SELECTING_TRUMP: 'Selecting_Trump',
   SELECTING_PARTNERS: 'Selecting_Partners',
   PLAYING: 'Playing',
+  END_GAME: 'End_Game',
 };
 
 const suits = {
-  c: 'Clubs',
-  d: 'Diamonds',
-  h: 'Hearts',
   s: 'Spades',
+  c: 'Clubs',
+  h: 'Hearts',
+  d: 'Diamonds',
 };
 
 const values = {
-  1: 'One',
-  2: 'Two',
-  3: 'Three',
-  4: 'Four',
-  5: 'Five',
-  6: 'Six',
-  7: 'Seven',
-  8: 'Eight',
-  9: 'Nine',
-  10: 'Ten',
+  a: 'Ace',
+  '2': 'Two',
+  '3': 'Three',
+  '4': 'Four',
+  '5': 'Five',
+  '6': 'Six',
+  '7': 'Seven',
+  '8': 'Eight',
+  '9': 'Nine',
+  '10': 'Ten',
   j: 'Jack',
   q: 'Queen',
   k: 'King',
-  a: 'Ace',
 };
+
+const faceValues = {
+  j: 11,
+  q: 12,
+  k: 13,
+  a: 14,
+};
+
+const biddingMillis = 30000;
 
 module.exports = {
   name: 'bt',
@@ -70,91 +81,86 @@ module.exports = {
           Math.floor(52 / game.players.length)
         );
         console.log(game.hands[player]);
+        sortHands(game, player);
         sendHand(game, player);
       });
       const startEmbed = new discord.MessageEmbed()
         .setColor('#32cfc1')
         .setTitle('The game has started!')
         .setDescription(
-          `It is ${
-            game.players[game.turn].username
-          }'sgame.turnto start bidding.\n
-          Type !bt bid=<int> to bid an integer amount between 0 and 250, or type !bt forfeit to stop bidding.\n
+          `It is ${game.players[game.turn].username}'s turn to start bidding.\n
+          Type !bt <int> to bid an integer amount between 0 and 250, or type !bt forfeit to stop bidding.\n
           Bidding will stop when all players except one have forfeited.
           `
         );
       game.stage = Stages.BIDDING;
+      game.secondsLeft = biddingMillis / 1000;
+      game.timeout = setTimeout(() => {
+        if (!game.highestBidder) {
+          game.highestBid = 125;
+          game.highestBidder =
+            game.players[Math.floor(Math.random() * game.players.length)];
+          return message.channel.send(
+            `Since no one bid, ${game.highestBidder.username} has been chosen as the random default highest bidder.`
+          );
+        }
+        message.channel.send(
+          `${game.highestBidder.username} has bidded ${game.highestBid}, bringing an end to the bidding round.`
+        );
+        clearInterval(game.interval);
+        game.stage = Stages.SELECTING_TRUMP;
+      }, biddingMillis);
+      game.interval = setInterval(() => {
+        console.log('interval called', game.secondsLeft);
+        game.secondsLeft -= 1;
+      }, 1000);
       return message.channel.send(startEmbed);
     } else if (
       game.players[game.turn] !== message.author &&
+      game.stage !== Stages.BIDDING &&
       game.stage !== Stages.SELECTING_TRUMP &&
       game.stage !== Stages.SELECTING_PARTNERS
     ) {
       return message.reply('It is not your turn!');
     }
     if (game.stage === Stages.BIDDING) {
-      if (args['bid']) {
-        if (game.highestBid && args['bid'] <= game.highestBid)
-          return message.reply(
-            'You need to bid more than the current highest bid, or forfeit'
+      let bid = clip(Object.keys(args)[0], 125, 250);
+      console.log(!isNaN(bid), !game.highestBid, bid > game.highestBid);
+      if (!isNaN(bid) && (!game.highestBid || bid > game.highestBid)) {
+        game.highestBid = bid;
+        game.highestBidder = message.author;
+        const bidEmbed = new discord.MessageEmbed()
+          .setColor('32cfc1')
+          .setTitle('Bidding')
+          .addFields(
+            {
+              name: 'Highest Bid',
+              value: !game.highestBid ? 'none' : game.highestBid,
+            },
+            {
+              name: 'Highest Bidder',
+              value: !game.highestBidder ? 'none' : game.highestBidder,
+            },
+            {
+              name: 'Seconds Left',
+              value: Math.floor(game.secondsLeft),
+            }
           );
-        game.highestBid = clip(
-          !game.highestBid
-            ? args['bid']
-            : Math.max(args['bid'], game.highestBid),
-          100,
-          250
-        );
-        message.channel.send(
-          `${game.players[game.turn].username} just bid ${clip(
-            args['bid'],
-            100,
-            250
-          )}`
-        );
-      } else if (args['forfeit']) {
-        game.forfeits.push(message.author);
-        message.channel.send(
-          `${game.players[game.turn].username} just forfeited!`
-        );
-      }
+        message.channel.send(bidEmbed);
 
-      if (game.forfeits.length === game.players.length - 1) {
-        game.highestBidder = game.players.find(
-          (player) => !game.forfeits.includes(player)
-        );
-        game.partnership = [game.highestBidder];
-        game.opposition = [];
-        game.stage = Stages.SELECTING_TRUMP;
-        return message.channel.send(
-          `Everyone except for ${game.highestBidder.username} has forfeited, bringing an end to the bidding round.\n${game.highestBidder.username}, type !bt trump= followed by a suit to declare as the trump suit ('c' (clubs), 'd' (diamonds), 'h' (hearts), or 's' (spades))`
-        );
-      }
-      let forfeitedPlayers = game.forfeits.map((player) => player.username);
-
-      const bidEmbed = new discord.MessageEmbed()
-        .setColor('32cfc1')
-        .setTitle('Bidding')
-        .addFields(
-          {
-            name: 'Highest Bid',
-            value: !game.highestBid ? 'none' : game.highestBid,
-          },
-          {
-            name: 'Turn',
-            value: game.players[(game.turn + 1) % game.players.length].username,
-          },
-          {
-            name: 'Forfeited Players',
-            value: forfeitedPlayers.length === 0 ? 'none' : forfeitedPlayers,
-          }
-        );
-      game.turn = (game.turn + 1) % game.players.length;
-      message.channel.send(bidEmbed);
+        if (bid === 250) {
+          game.stage = Stages.SELECTING_TRUMP;
+          clearInterval(game.interval);
+          clearTimeout(game.timeout);
+          return message.channel.send(
+            `${game.highestBidder.username} has bidded 250, the highest possible bid, bringing an end to the bidding round.\n${game.highestBidder.username}, type !bt trump= followed by a suit to declare as the trump suit ('c' (clubs), 'd' (diamonds), 'h' (hearts), or 's' (spades))`
+          );
+        }
+      } else return message.reply('You need to enter an integer value to bid.');
     } else if (game.stage === Stages.SELECTING_TRUMP) {
       if (message.author !== game.highestBidder)
         return message.reply(
-          `Only the highest bidder, ${highestBidder.username}, can send messages at this time.`
+          `Only the highest bidder, ${game.highestBidder.username}, can send messages at this time.`
         );
       if (!['c', 'd', 'h', 's'].includes(args['trump']))
         return message.reply(
@@ -170,7 +176,7 @@ module.exports = {
     } else if (game.stage === Stages.SELECTING_PARTNERS) {
       if (message.author !== game.highestBidder)
         return message.reply(
-          `Only the highest bidder, ${highestBidder.username}, can send messages at this time.`
+          `Only the highest bidder, ${game.highestBidder.username}, can send messages at this time.`
         );
       if (!isValidCard(args['partner']))
         return message.reply('You need to enter a valid card.');
@@ -189,7 +195,7 @@ module.exports = {
           args['partner']
         )} as their partner.`
       );
-      if (game.partnerStage === Math.floor(game.players.length / 2)) {
+      if (game.partnerStage === Math.floor(game.players.length / 2) - 1) {
         game.players.forEach((player) => {
           if (!game.partnership.includes(player)) {
             game.opposition.push(player);
@@ -217,15 +223,6 @@ module.exports = {
               Object.values(game.cards)[0].length - 1
             )
           : null;
-      if (firstSuit)
-        console.log(
-          firstSuit,
-          card.charAt(card.length - 1) !==
-            firstSuit.charAt(firstSuit.length - 1),
-          game.hands[message.author]
-            .map((hand) => hand.charAt(hand.length - 1))
-            .includes(firstSuit)
-        );
       if (
         firstSuit &&
         card.charAt(card.length - 1) !==
@@ -240,13 +237,156 @@ module.exports = {
       message.channel.send(
         `${message.author.username} played the ${getCardName(card)}`
       );
+      game.hands[message.author].splice(
+        game.hands[message.author].indexOf(card),
+        1
+      );
+      if (game.hands[message.author].length > 0) sendHand(game, message.author);
       game.cards[message.author] = card;
       sendCards(game, message, () => {
-        game.turn = (game.turn + 1) % game.players.length;
+        if (Object.values(game.cards).length === game.players.length) {
+          let winner = getWinner(game);
+          message.channel.send(
+            `${
+              winner.username
+            } is the winner of this round by playing the ${getCardName(
+              game.cards[winner]
+            )}!`
+          );
+          if (game.partnership.includes(winner)) {
+            let counts = 0;
+            game.partnership.forEach((player) => {
+              if (player === winner) counts++;
+            });
+            if (counts === 2)
+              Object.values(game.cards).forEach((card) => {
+                game.partnerPoints += 2 * getPoints(card);
+              });
+            else
+              Object.values(game.cards).forEach((card) => {
+                game.partnerPoints += getPoints(card);
+              });
+          }
+          console.log('partnerPoints: ' + game.partnerPoints);
+          game.cards = {};
+          game.turn = game.players.indexOf(winner);
+          if (game.hands[winner].length === 0) {
+            message.channel.send(
+              'All cards have been played, bringing an end to the playing rounds.'
+            );
+            //end game
+            if (game.partnerPoints >= game.highestBid) {
+              message.channel.send(
+                `Congratulations! The partnership team has collected ${game.partnerPoints} points, which is greater than the highest bid, which was ${game.highestBid}.\nThe partnership has won this game.`
+              );
+              for (let player of game.partnership) {
+                User.findOne({ name: player.username }, (err, user) => {
+                  if (!user) {
+                    let pts;
+                    if (player === game.highestBidder)
+                      pts = 50 + game.highestBid;
+                    else pts = game.highestBid;
+                    User.create({
+                      _id: mongoose.Types.ObjectId(),
+                      name: player.username,
+                      blackTriplePoints: pts,
+                    });
+                  } else {
+                    let pts;
+                    if (player === game.highestBidder)
+                      pts = 50 + game.highestBid + user.blackTriplePoints;
+                    else pts = game.highestBid + game.blackTriplePoints;
+                    User.update(
+                      { name: player.username },
+                      { blackTriplePoints: pts }
+                    );
+                  }
+                });
+              }
+            } else {
+              message.channel.send(
+                `The partnership collected ${game.partnerPoints} points, which is less than the highest bid, which was ${game.highestBid}.\nThe partnership has lost this game.`
+              );
+              game.partnership.filter(
+                (item, index) => game.partnership.indexOf(item) === index
+              );
+              for (let player of game.partnership) {
+                User.findOne({ name: player.username }, (err, user) => {
+                  if (!user) {
+                    let pts;
+                    if (player === game.highestBidder) pts = -100;
+                    else pts = -50;
+                    User.create({
+                      _id: mongoose.Types.ObjectId(),
+                      name: player.username,
+                      blackTriplePoints: pts,
+                    });
+                  } else {
+                    if (player === game.highestBidder)
+                      pts = user.blackTriplePoints - 100;
+                    else pts = user.blackTriplePoints - 50;
+                    User.update(
+                      { name: player.username },
+                      { blackTriplePoints: pts }
+                    );
+                  }
+                });
+              }
+            }
+            games.splice(game);
+          }
+        } else game.turn = (game.turn + 1) % game.players.length;
       });
     }
   },
 };
+
+function sortHands(game, player) {
+  game.hands[player].sort((a, b) => {
+    aSuit = Object.keys(suits).indexOf(a.charAt(a.length - 1));
+    bSuit = Object.keys(suits).indexOf(b.charAt(b.length - 1));
+    if (
+      aSuit < bSuit ||
+      (aSuit === bSuit &&
+        Object.keys(values).indexOf(a.substring(0, a.length - 1)) <
+          Object.keys(values).indexOf(b.substring(0, b.length - 1)))
+    )
+      return -1;
+    return 1;
+  });
+}
+
+function getWinner(game) {
+  let winner;
+  for (let key of game.players) {
+    let value = game.cards[key];
+    let oldSuit, newCardBigger;
+    if (winner) {
+      oldSuit = game.cards[winner].charAt(game.cards[winner].length - 1);
+      newCardBigger = getPointValue(value) > getPointValue(game.cards[winner]);
+    }
+
+    if (!winner) winner = key;
+    else if (value.charAt(value.length - 1) === game.trump) {
+      if ((oldSuit === game.trump && newCardBigger) || oldSuit !== game.trump)
+        winner = key;
+    } else if (newCardBigger && oldSuit !== game.trump) winner = key;
+  }
+  return winner;
+}
+
+function getPoints(card) {
+  if (card === '3s') return 30;
+  else if (card.charAt(0) === '5') return 5;
+  else if (card.length === 3 || isNaN(card.charAt(0))) return 10;
+  return 0;
+}
+
+function getPointValue(value) {
+  if (isNaN(value.charAt(0))) return parseInt(faceValues[value.charAt(0)]);
+  if (value.length === 3) return 10;
+  return parseInt(value.charAt(0));
+}
 
 function isValidCard(card) {
   return fs.readdirSync('./images/playing_cards').includes(`${card}.png`);

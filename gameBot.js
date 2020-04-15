@@ -5,9 +5,9 @@ const Game = require('./models/game');
 //creating map of commands {'name': file}
 const client = new discord.Client();
 client.commands = new discord.Collection();
+client.mongoose = require('./utils/mongoose');
 module.exports = client;
 
-// const token = process.env.token;
 const prefix = process.env.prefix;
 const token = process.env.token;
 
@@ -70,4 +70,5 @@ client.on('message', (message) => {
   }
 });
 
+client.mongoose.init();
 client.login(token);
