@@ -42,7 +42,7 @@ const faceValues = {
   a: 14,
 };
 
-const biddingMillis = 30000;
+const biddingMillis = 60000;
 
 module.exports = {
   name: 'bt',
@@ -56,6 +56,23 @@ module.exports = {
       return message.reply('You have to join a game to use that command.');
     //exiting if 7 players have not been joined yet.
     if (game.players.length !== this.players && !game.started) return;
+
+    if (args['info']) {
+      if (game.trump) {
+        message.reply(`The trump suit of this game is ${suits[game.trump]}`);
+      } else message.reply('The trump suit has not been declared yet!');
+      if (game.partnerCard)
+        return message.reply(
+          `The partner card of this game is the ${getCardName(
+            game.partnerCard
+          )}`
+        );
+      else
+        return message.reply(
+          'The partner card of this game has not been declared yet!'
+        );
+    }
+
     //setting up deck if it has not been created yet
     if (!game.deck) {
       //creating a deck containing all the cards
@@ -88,24 +105,28 @@ module.exports = {
         .setColor('#32cfc1')
         .setTitle('The game has started!')
         .setDescription(
-          `It is ${game.players[game.turn].username}'s turn to start bidding.\n
-          Type !bt <int> to bid an integer amount between 0 and 250, or type !bt forfeit to stop bidding.\n
-          Bidding will stop when all players except one have forfeited.
+          `The bidding period has begun!\n
+          Type !bt <int> to bid an integer amount between 0 and 250\n
+          Bidding will stop in one minute, or when a player has bid the maximum amount, 250.
           `
         );
       game.stage = Stages.BIDDING;
+      game.partnership = [];
+      game.opposition = [];
+      game.partnerPoints = 0;
       game.secondsLeft = biddingMillis / 1000;
       game.timeout = setTimeout(() => {
         if (!game.highestBidder) {
           game.highestBid = 125;
           game.highestBidder =
             game.players[Math.floor(Math.random() * game.players.length)];
-          return message.channel.send(
+          game.partnership.push(game.highestBidder);
+          message.channel.send(
             `Since no one bid, ${game.highestBidder.username} has been chosen as the random default highest bidder.`
           );
         }
         message.channel.send(
-          `${game.highestBidder.username} has bidded ${game.highestBid}, bringing an end to the bidding round.`
+          `${game.highestBidder.username} has bidded ${game.highestBid}, bringing an end to the bidding round.\n${game.highestBidder.username}, type !bt trump= followed by a suit to declare as the trump suit ('c' (clubs), 'd' (diamonds), 'h' (hearts), or 's' (spades))`
         );
         clearInterval(game.interval);
         game.stage = Stages.SELECTING_TRUMP;
@@ -125,7 +146,6 @@ module.exports = {
     }
     if (game.stage === Stages.BIDDING) {
       let bid = clip(Object.keys(args)[0], 125, 250);
-      console.log(!isNaN(bid), !game.highestBid, bid > game.highestBid);
       if (!isNaN(bid) && (!game.highestBid || bid > game.highestBid)) {
         game.highestBid = bid;
         game.highestBidder = message.author;
@@ -152,6 +172,7 @@ module.exports = {
           game.stage = Stages.SELECTING_TRUMP;
           clearInterval(game.interval);
           clearTimeout(game.timeout);
+          game.partnership.push(game.highestBidder);
           return message.channel.send(
             `${game.highestBidder.username} has bidded 250, the highest possible bid, bringing an end to the bidding round.\n${game.highestBidder.username}, type !bt trump= followed by a suit to declare as the trump suit ('c' (clubs), 'd' (diamonds), 'h' (hearts), or 's' (spades))`
           );
@@ -172,6 +193,7 @@ module.exports = {
           suits[game.trump]
         } as the trump suit.\nType !bt partner= followed by a card name to select a partner. Card names start with the rank (2-10, j, q, k, a), and are followed by the suit (c, d, h, s).\nFor example, a card name of 'as' would represent the ace of spades.`
       );
+
       game.stage = Stages.SELECTING_PARTNERS;
     } else if (game.stage === Stages.SELECTING_PARTNERS) {
       if (message.author !== game.highestBidder)
@@ -187,7 +209,7 @@ module.exports = {
           player.send('You are part of the partnership.');
         }
       });
-      game.partnerStage++;
+      game.partnerCard = args['partner'];
       message.channel.send(
         `${
           message.author.username
@@ -195,6 +217,7 @@ module.exports = {
           args['partner']
         )} as their partner.`
       );
+      game.partnerStage++;
       if (game.partnerStage === Math.floor(game.players.length / 2) - 1) {
         game.players.forEach((player) => {
           if (!game.partnership.includes(player)) {
@@ -254,19 +277,20 @@ module.exports = {
             )}!`
           );
           if (game.partnership.includes(winner)) {
-            let counts = 0;
-            game.partnership.forEach((player) => {
-              if (player === winner) counts++;
+            // let counts = 0;
+            // game.partnership.forEach((player) => {
+            //   if (player === winner) counts++;
+            // });
+            // if (counts === 2)
+            //   Object.values(game.cards).forEach((card) => {
+            //     game.partnerPoints += 2 * getPoints(card);
+            //   });
+            // else
+            Object.values(game.cards).forEach((card) => {
+              game.partnerPoints += getPoints(card);
             });
-            if (counts === 2)
-              Object.values(game.cards).forEach((card) => {
-                game.partnerPoints += 2 * getPoints(card);
-              });
-            else
-              Object.values(game.cards).forEach((card) => {
-                game.partnerPoints += getPoints(card);
-              });
           }
+          console.log('cards: ' + Object.values(game.cards));
           console.log('partnerPoints: ' + game.partnerPoints);
           game.cards = {};
           game.turn = game.players.indexOf(winner);
@@ -419,7 +443,6 @@ function sendCards(game, message, cb) {
         });
       message.channel.send(playEmbed).then((message) =>
         fs.unlink('./images/cards.png', (result) => {
-          console.log('done deleting');
           cb();
         })
       );
@@ -437,19 +460,14 @@ function sendHand(game, player) {
   let fileName = '';
   merge(game.hands[player].map((card) => `./images/playing_cards/${card}.png`))
     .then((img) => {
-      console.log('done merging');
       fileName = `./images/${player.username}.png`;
       img.write(fileName, () => {
-        console.log('done writing');
         player
           .send('Your black triple hand:', {
             files: [fileName],
           })
           .then((message) => {
-            console.log('done sending');
-            fs.unlink(fileName, (result) => {
-              console.log('done deleting');
-            });
+            fs.unlink(fileName, (result) => {});
           });
       });
     })

@@ -7,8 +7,8 @@ module.exports = {
     'Allows the user to a join a game with a specific index. Usage: !join <int>',
   execute(message, args, games) {
     //exiting if user is attempting to join their own game.
-    // if (games.find((game) => game.players.includes(message.author)))
-    //   return message.reply(`You are already part of this game!`);
+    if (games.find((game) => game.players.includes(message.author)))
+      return message.reply(`You are already part of this game!`);
     //finding the game the user wants to join using the args object
     let joinGame =
       games[parseInt(Object.keys(args).find((key) => !isNaN(key))) - 1];

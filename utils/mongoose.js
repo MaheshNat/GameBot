@@ -11,7 +11,10 @@ module.exports = {
       family: 4,
     };
 
-    mongoose.connect(process.env.mongo, dbOptions);
+    mongoose.connect(
+      'mongodb+srv://mahesh:mahesh2004@gamebot-qqbdn.mongodb.net/test?retryWrites=true&w=majority',
+      dbOptions
+    );
     mongoose.set('useFindAndModify', false);
     mongoose.Promise = global.Promise;
 

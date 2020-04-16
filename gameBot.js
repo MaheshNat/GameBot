@@ -8,8 +8,10 @@ client.commands = new discord.Collection();
 client.mongoose = require('./utils/mongoose');
 module.exports = client;
 
-const prefix = process.env.prefix;
-const token = process.env.token;
+// const prefix = process.env.prefix;
+// const token = process.env.token;
+const prefix = '!';
+const token = 'NjkyMDkwNDEzMzE3NzUwNzg1.XpTXPg.aNXw8TA3k9sU26OdXucK8FMpZ1k';
 
 //putting command files to client.commands map
 const commandFiles = fs
