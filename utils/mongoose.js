@@ -4,7 +4,7 @@ module.exports = {
   init: () => {
     const dbOptions = {
       useNewUrlParser: true,
-      // useUnifiedTopology: true,
+      useUnifiedTopology: true,
       autoIndex: false,
       poolSize: 5,
       connectTimeoutMS: 10000,
