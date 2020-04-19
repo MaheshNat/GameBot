@@ -12,7 +12,7 @@ module.exports = {
     };
 
     mongoose.connect(
-      'mongodb+srv://mahesh:mahesh2004@gamebot-qqbdn.mongodb.net/test?retryWrites=true&w=majority',
+      'mongodb+srv://mahesh:Mahesh%402004%21%40@gamebot-qqbdn.mongodb.net/test?retryWrites=true&w=majority',
       dbOptions
     );
     mongoose.set('useFindAndModify', false);

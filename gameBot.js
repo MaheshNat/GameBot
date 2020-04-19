@@ -8,8 +8,11 @@ client.commands = new discord.Collection();
 client.mongoose = require('./utils/mongoose');
 module.exports = client;
 
-const prefix = process.env.prefix;
-const token = process.env.token;
+// const prefix = process.env.prefix;
+// const token = process.env.token;
+
+const prefix = '!';
+const token = 'NjkyMDkwNDEzMzE3NzUwNzg1.Xpfudw.6M-jPGAxCqKLNP_6oE4b6sSZor0';
 
 //putting command files to client.commands map
 const commandFiles = fs
@@ -48,7 +51,7 @@ client.on('message', (message) => {
     //checking if attempting to create a new game
     if (command.isGame && (Object.keys(args).length === 0 || args['private'])) {
       //exiting if user is the creator of a current game, and is attempting to create a new one
-      if (games.find((game) => game.createdBy === message.author))
+      if (games.find((game) => game.players.includes(message.author)))
         return message.reply(
           'You can only create one game at a time! Finish your existing game to created a new one.'
         );

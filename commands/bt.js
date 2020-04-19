@@ -9,7 +9,6 @@ const Stages = {
   SELECTING_TRUMP: 'Selecting_Trump',
   SELECTING_PARTNERS: 'Selecting_Partners',
   PLAYING: 'Playing',
-  END_GAME: 'End_Game',
 };
 
 const suits = {
@@ -42,7 +41,7 @@ const faceValues = {
   a: 14,
 };
 
-const biddingMillis = 60000;
+const biddingMillis = 2000;
 
 module.exports = {
   name: 'bt',
@@ -77,8 +76,6 @@ module.exports = {
     if (!game.deck) {
       //creating a deck containing all the cards
       game.deck = [];
-      //creating an array to store players who forfeit during bidding round
-      game.forfeits = [];
       //stores the state of the game
       game.turn = 0;
       game.stage = null;
@@ -107,8 +104,7 @@ module.exports = {
         .setDescription(
           `The bidding period has begun!\n
           Type !bt <int> to bid an integer amount between 0 and 250\n
-          Bidding will stop in one minute, or when a player has bid the maximum amount, 250.
-          `
+          Bidding will stop in one minute, or when a player has bid the maximum amount, 250.`
         );
       game.stage = Stages.BIDDING;
       game.partnership = [];
@@ -129,6 +125,10 @@ module.exports = {
           `${game.highestBidder.username} has bidded ${game.highestBid}, bringing an end to the bidding round.\n${game.highestBidder.username}, type !bt trump= followed by a suit to declare as the trump suit ('c' (clubs), 'd' (diamonds), 'h' (hearts), or 's' (spades))`
         );
         clearInterval(game.interval);
+        console.log(
+          'partnership: ' + game.partnership.map((partner) => partner.username),
+          ', opposition: ' + game.opposition.map((player) => player.username)
+        );
         game.stage = Stages.SELECTING_TRUMP;
       }, biddingMillis);
       game.interval = setInterval(() => {
@@ -138,15 +138,13 @@ module.exports = {
       return message.channel.send(startEmbed);
     } else if (
       game.players[game.turn] !== message.author &&
-      game.stage !== Stages.BIDDING &&
-      game.stage !== Stages.SELECTING_TRUMP &&
-      game.stage !== Stages.SELECTING_PARTNERS
+      game.stage === Stages.PLAYING
     ) {
       return message.reply('It is not your turn!');
     }
     if (game.stage === Stages.BIDDING) {
       let bid = clip(Object.keys(args)[0], 125, 250);
-      if (!isNaN(bid) && (!game.highestBid || bid > game.highestBid)) {
+      if (!isNaN(bid) && (!game.highestBid || bid >= game.highestBid + 5)) {
         game.highestBid = bid;
         game.highestBidder = message.author;
         const bidEmbed = new discord.MessageEmbed()
@@ -177,7 +175,10 @@ module.exports = {
             `${game.highestBidder.username} has bidded 250, the highest possible bid, bringing an end to the bidding round.\n${game.highestBidder.username}, type !bt trump= followed by a suit to declare as the trump suit ('c' (clubs), 'd' (diamonds), 'h' (hearts), or 's' (spades))`
           );
         }
-      } else return message.reply('You need to enter an integer value to bid.');
+      } else
+        return message.reply(
+          'You need to enter an integer value to bid, which has to be at least 5 points greater than the current highest bid.'
+        );
     } else if (game.stage === Stages.SELECTING_TRUMP) {
       if (message.author !== game.highestBidder)
         return message.reply(
@@ -217,7 +218,8 @@ module.exports = {
           args['partner']
         )} as their partner.`
       );
-      game.partnerStage++;
+
+      console.log(game.partnerStage);
       if (game.partnerStage === Math.floor(game.players.length / 2) - 1) {
         game.players.forEach((player) => {
           if (!game.partnership.includes(player)) {
@@ -232,8 +234,13 @@ module.exports = {
         game.turn = game.players.findIndex(
           (player) => player === message.author
         );
+        console.log(
+          'partnership: ' + game.partnership.map((partner) => partner.username),
+          ', opposition: ' + game.opposition.map((player) => player.username)
+        );
         game.stage = Stages.PLAYING;
       }
+      game.partnerStage++;
     } else if (game.stage === Stages.PLAYING) {
       let card = Object.keys(args)[0];
       if (!isValidCard(card))
@@ -277,18 +284,19 @@ module.exports = {
             )}!`
           );
           if (game.partnership.includes(winner)) {
-            // let counts = 0;
-            // game.partnership.forEach((player) => {
-            //   if (player === winner) counts++;
-            // });
-            // if (counts === 2)
-            //   Object.values(game.cards).forEach((card) => {
-            //     game.partnerPoints += 2 * getPoints(card);
-            //   });
-            // else
-            Object.values(game.cards).forEach((card) => {
-              game.partnerPoints += getPoints(card);
+            let count = 0;
+            game.partnership.forEach((player) => {
+              if (player === winner) count++;
             });
+            if (count === 2)
+              Object.values(game.cards).forEach((card) => {
+                game.partnerPoints += 2 * getPoints(card);
+              });
+            else
+              Object.values(game.cards).forEach((card) => {
+                game.partnerPoints += getPoints(card);
+                console.log('card: ' + card + ', points: ' + getPoints(card));
+              });
           }
           console.log('cards: ' + Object.values(game.cards));
           console.log('partnerPoints: ' + game.partnerPoints);
