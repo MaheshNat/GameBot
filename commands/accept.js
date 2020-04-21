@@ -3,8 +3,7 @@ const client = require('../gameBot');
 module.exports = {
   name: 'accept',
   isGame: false,
-  description:
-    'Allows a game creator to invite another user to their private game. Usage: !accept @<username>',
+  description: `Allows a game creator to invite another user to their private game. Usage: ${process.env.prefix}accept @<username>`,
   execute(message, args, games) {
     //finding the game the user created
     let game = games.find((game) => game.createdBy === message.author);

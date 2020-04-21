@@ -15,13 +15,13 @@ module.exports = {
     if (!joinGame) return message.reply('You need to enter an id to join.');
     if (joinGame.started) {
       return message.reply(
-        'This game has already started! Type !games to view current games.'
+        `This game has already started! Type ${process.env.prefix}games to view current games.`
       );
     }
     if (joinGame.isPrivate) {
       joinGame.requests.push(message.author);
       return message.channel.send(
-        `@${joinGame.createdBy.username}, would you like ${message.author.username} to join your game? Type !accept @${message.author.username} to accept.`
+        `@${joinGame.createdBy.username}, would you like ${message.author.username} to join your game? Type ${process.env.prefix}accept @${message.author.username} to accept.`
       );
     }
     //adding the user to the game's players

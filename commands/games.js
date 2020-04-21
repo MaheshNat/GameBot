@@ -3,7 +3,7 @@ const client = require('../gameBot');
 module.exports = {
   name: 'games',
   isGame: false,
-  description: 'Outputs the current games. Usage: !games.',
+  description: `Outputs the current games. Usage: ${process.env.token}games.`,
   execute(message, args, games) {
     let reply = '';
     //exiting if no games have been created

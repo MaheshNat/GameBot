@@ -62,7 +62,7 @@ client.on('message', (message) => {
         )
       );
       message.reply(
-        `Your game has been created! Other players can join this game by typing !join ${games.length}`
+        `Your game has been created! Other players can join this game by typing ${process.env.prefix}join ${games.length}`
       );
     }
     //executing appropriate command

@@ -3,8 +3,7 @@ const client = require('../gameBot');
 module.exports = {
   name: 'leave',
   isGame: false,
-  description:
-    'Allows the user to leave the game they are part of. Usage: !leave',
+  description: `Allows the user to leave the game they are part of. Usage: ${process.env.prefix}leave`,
   execute(message, args, games) {
     //finding the game the user wants to leave
     let game = games.find((game) => game.players.includes(message.author));

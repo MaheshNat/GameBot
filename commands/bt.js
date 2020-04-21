@@ -103,7 +103,7 @@ module.exports = {
         .setTitle('The game has started!')
         .setDescription(
           `The bidding period has begun!\n
-          Type !bt <int> to bid an integer amount between 0 and 250\n
+          Type ${process.env.prefix}bt <int> to bid an integer amount between 0 and 250\n
           Bidding will stop in one minute, or when a player has bid the maximum amount, 250.`
         );
       game.stage = Stages.BIDDING;
@@ -122,7 +122,7 @@ module.exports = {
           );
         }
         message.channel.send(
-          `${game.highestBidder.username} has bidded ${game.highestBid}, bringing an end to the bidding round.\n${game.highestBidder.username}, type !bt trump= followed by a suit to declare as the trump suit ('c' (clubs), 'd' (diamonds), 'h' (hearts), or 's' (spades))`
+          `${game.highestBidder.username} has bidded ${game.highestBid}, bringing an end to the bidding round.\n${game.highestBidder.username}, type ${process.env.prefix}bt trump= followed by a suit to declare as the trump suit ('c' (clubs), 'd' (diamonds), 'h' (hearts), or 's' (spades))`
         );
         clearInterval(game.interval);
         console.log(
@@ -172,7 +172,7 @@ module.exports = {
           clearTimeout(game.timeout);
           game.partnership.push(game.highestBidder);
           return message.channel.send(
-            `${game.highestBidder.username} has bidded 250, the highest possible bid, bringing an end to the bidding round.\n${game.highestBidder.username}, type !bt trump= followed by a suit to declare as the trump suit ('c' (clubs), 'd' (diamonds), 'h' (hearts), or 's' (spades))`
+            `${game.highestBidder.username} has bidded 250, the highest possible bid, bringing an end to the bidding round.\n${game.highestBidder.username}, type ${process.env.prefix}bt trump= followed by a suit to declare as the trump suit ('c' (clubs), 'd' (diamonds), 'h' (hearts), or 's' (spades))`
           );
         }
       } else
@@ -186,13 +186,15 @@ module.exports = {
         );
       if (!['c', 'd', 'h', 's'].includes(args['trump']))
         return message.reply(
-          `You need to enter !bt trump= followed by 'c' (clubs), 'd' (diamonds), 'h' (hearts), or 's' (spades)`
+          `You need to enter ${process.env.prefix}bt trump= followed by 'c' (clubs), 'd' (diamonds), 'h' (hearts), or 's' (spades)`
         );
       game.trump = args['trump'];
       message.channel.send(
         `${message.author.username} selected ${
           suits[game.trump]
-        } as the trump suit.\nType !bt partner= followed by a card name to select a partner. Card names start with the rank (2-10, j, q, k, a), and are followed by the suit (c, d, h, s).\nFor example, a card name of 'as' would represent the ace of spades.`
+        } as the trump suit.\nType ${
+          process.env.prefix
+        }bt partner= followed by a card name to select a partner. Card names start with the rank (2-10, j, q, k, a), and are followed by the suit (c, d, h, s).\nFor example, a card name of 'as' would represent the ace of spades.`
       );
 
       game.stage = Stages.SELECTING_PARTNERS;

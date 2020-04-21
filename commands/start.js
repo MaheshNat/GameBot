@@ -3,8 +3,7 @@ const client = require('../gameBot');
 module.exports = {
   name: 'start',
   isGame: false,
-  description:
-    'Allows the creator of a game to start his/her game. Usage: !start',
+  description: `Allows the creator of a game to start his/her game. Usage: ${process.env.prefix}start`,
   execute(message, args, games) {
     //finding the game the user wants to start
     let game = games.find((game) => game.createdBy === message.author);

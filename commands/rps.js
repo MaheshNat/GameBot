@@ -20,8 +20,12 @@ module.exports = {
       game.hand2 = '';
 
       //sends message to the player
-      game.players[0].send('Select: \n !rps choice=(1:Rock 2:paper 3:scissor)');
-      game.players[1].send('Select: \n !rps choice=(1:Rock 2:paper 3:scissor)');
+      game.players[0].send(
+        `Select: \n ${process.env.prefix}rps choice=(1:Rock 2:paper 3:scissor)`
+      );
+      game.players[1].send(
+        `Select: \n ${process.env.prefix}rps choice=(1:Rock 2:paper 3:scissor)`
+      );
       return message.channel.send('game started');
     }
 

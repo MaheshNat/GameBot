@@ -3,7 +3,7 @@ const fs = require('fs');
 module.exports = {
   name: 'help',
   isGame: false,
-  description: 'Sends a description of every command. Usage: !help',
+  description: `Sends a description of every command. Usage: ${process.env.prefix}help`,
   execute(message, args, games) {
     let helpMessage = 'Commands:\n';
 
@@ -15,7 +15,7 @@ module.exports = {
     //looping through command files, and outputting each command's name and description
     for (const file of commandFiles) {
       const command = require(`./${file}`);
-      helpMessage += `'!${command.name}': ${command.description}\n`;
+      helpMessage += `'${process.env.prefix}${command.name}': ${command.description}\n`;
     }
     message.channel.send(helpMessage);
   },
