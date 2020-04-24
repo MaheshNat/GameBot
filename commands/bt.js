@@ -41,7 +41,7 @@ const faceValues = {
   a: 14,
 };
 
-const biddingMillis = 2000;
+const biddingMillis = 60000;
 
 module.exports = {
   name: 'bt',
