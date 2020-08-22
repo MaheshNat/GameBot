@@ -7,7 +7,7 @@ module.exports = {
   name: 'ttt',
   isGame: true,
   players: 2,
-  description: `A traditional game of tic-tac-toe. Usage: ${process.env.prefix}ttt to create a game, ${process.env.token}ttt <int> to place a marker at the location <int> on the board.`,
+  description: `A traditional game of tic-tac-toe. Usage: ${process.env.prefix}ttt to create a game, ${process.env.prefix}ttt <int> to place a marker at the location <int> on the board.`,
   execute(message, args, games) {
     //finding the game the user is in
     let game = games.find((game) => game.players.includes(message.author));

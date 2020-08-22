@@ -3,8 +3,7 @@ const client = require('../gameBot');
 module.exports = {
   name: 'join',
   isGame: false,
-  description:
-    'Allows the user to a join a game with a specific index. Usage: !join <int>',
+  description: `Allows the user to a join a game with a specific index. Usage: ${process.env.prefix}join <int>`,
   execute(message, args, games) {
     //exiting if user is attempting to join their own game.
     if (games.find((game) => game.players.includes(message.author)))
